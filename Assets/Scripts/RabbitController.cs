@@ -12,15 +12,29 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class RabbitController : MonoBehaviour
 {
-    // ── Movement ─────────────────────────────────────────────────────────────
+    // ── Movement ──────────────────────────────────────────────────────────────
     [Header("Movement")]
     [SerializeField] private float walkSpeed     = 5f;
-    [SerializeField] private float sprintSpeed   = 10f;
+    [SerializeField] private float sprintSpeed   = 9f;
     [SerializeField] private float rotationSpeed = 14f;
 
-    // ── Bounce / Jump ─────────────────────────────────────────────────────────
-    [Header("Bounce")]
-    [Tooltip("How high the rabbit bounces in world units.")]
+    // ── Natural Hops (auto, while moving) ─────────────────────────────────────
+    [Header("Natural Hops")]
+    [Tooltip("Height of each automatic hop while walking.")]
+    [SerializeField] private float hopHeight         = 0.18f;
+
+    [Tooltip("Height of each automatic hop while sprinting.")]
+    [SerializeField] private float sprintHopHeight   = 0.28f;
+
+    [Tooltip("Seconds between hops while walking.")]
+    [SerializeField] private float hopInterval       = 0.42f;
+
+    [Tooltip("Seconds between hops while sprinting (faster cadence).")]
+    [SerializeField] private float sprintHopInterval = 0.28f;
+
+    // ── Big Jump (manual) ─────────────────────────────────────────────────────
+    [Header("Big Jump")]
+    [Tooltip("Height of the player-triggered jump.")]
     [SerializeField] private float jumpHeight  = 1.8f;
 
     [Tooltip("Gravity applied per second. Higher = snappier arc.")]
@@ -29,34 +43,29 @@ public class RabbitController : MonoBehaviour
     [Tooltip("Grace period (seconds) after walking off a ledge where jumping still works.")]
     [SerializeField] private float coyoteTime  = 0.12f;
 
-    [Tooltip("Seconds before landing where a jump press is remembered and fires on touch-down.")]
+    [Tooltip("Seconds before landing where a jump press is remembered.")]
     [SerializeField] private float jumpBuffer  = 0.12f;
 
     // ── Squash & Stretch ──────────────────────────────────────────────────────
     [Header("Squash & Stretch")]
-    [Tooltip("The child Transform that holds the mesh (e.g. the 'master' bone or FBX root child). Leave empty to skip the effect.")]
+    [Tooltip("Child Transform holding the mesh (e.g. 'master' bone). Leave empty to skip.")]
     [SerializeField] private Transform visualRoot;
 
-    [SerializeField] private float squashAmount    = 0.28f;
-    [SerializeField] private float stretchAmount   = 0.18f;
-    [SerializeField] private float squashRecovery  = 9f;
+    [SerializeField] private float squashAmount   = 0.28f;
+    [SerializeField] private float stretchAmount  = 0.18f;
+    [SerializeField] private float squashRecovery = 9f;
 
     // ── Animator Parameters ───────────────────────────────────────────────────
     [Header("Animator")]
-    [Tooltip("Float parameter name for horizontal speed (blend trees).")]
     [SerializeField] private string speedParam      = "Speed";
-
-    [Tooltip("Bool parameter name for the Run state (matches the demo animator).")]
     [SerializeField] private string runParam        = "Run";
-
-    [Tooltip("Bool parameter name for whether the rabbit is grounded.")]
     [SerializeField] private string isGroundedParam = "IsGrounded";
 
     // ── Private State ─────────────────────────────────────────────────────────
-    private CharacterController  _cc;
-    private Animator             _anim;
-    private Camera               _cam;
-    private InputSystem_Actions  _input;
+    private CharacterController _cc;
+    private Animator            _anim;
+    private Camera              _cam;
+    private InputSystem_Actions _input;
 
     private Vector2 _moveInput;
     private Vector3 _velocity;
@@ -66,8 +75,8 @@ public class RabbitController : MonoBehaviour
 
     private float _coyoteTimer;
     private float _jumpBufferTimer;
+    private float _hopTimer;           // counts down to next auto-hop
 
-    // Cached animator hashes (avoids per-frame string lookups)
     private int _speedHash;
     private int _runHash;
     private int _isGroundedHash;
@@ -80,7 +89,6 @@ public class RabbitController : MonoBehaviour
         _cam   = Camera.main;
         _input = new InputSystem_Actions();
 
-        // Disable root motion so the CharacterController owns all movement
         if (_anim != null)
             _anim.applyRootMotion = false;
 
@@ -112,10 +120,9 @@ public class RabbitController : MonoBehaviour
         _isSprinting = _input.Player.Sprint.IsPressed();
 
         GroundCheck();
-        ProcessJump();
+        ProcessBigJump();
+        ProcessHop();
 
-        // Build the full motion vector and apply in ONE Move call to avoid
-        // double-stepping the CharacterController's internal ground detection.
         Vector3 motion = CalcHorizontalMotion();
         motion.y = _velocity.y;
         _cc.Move(motion * Time.deltaTime);
@@ -133,30 +140,59 @@ public class RabbitController : MonoBehaviour
         if (_isGrounded)
         {
             _coyoteTimer = coyoteTime;
-            // Reset vertical velocity when grounded so gravity doesn't accumulate
             if (_velocity.y < 0f)
                 _velocity.y = -2f;
         }
         else
         {
             _coyoteTimer -= Time.deltaTime;
-            // Accumulate gravity while airborne
-            _velocity.y += gravity * Time.deltaTime;
+            _velocity.y  += gravity * Time.deltaTime;
         }
     }
 
-    // ── Jump / Bounce ─────────────────────────────────────────────────────────
-    private void ProcessJump()
+    // ── Big Jump ──────────────────────────────────────────────────────────────
+    private void ProcessBigJump()
     {
         _jumpBufferTimer -= Time.deltaTime;
 
         if (_jumpBufferTimer > 0f && _coyoteTimer > 0f)
         {
-            // Classic jump formula: v = sqrt(2 * |g| * h)
-            _velocity.y      = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            LaunchVertical(jumpHeight);
             _coyoteTimer     = 0f;
             _jumpBufferTimer = 0f;
+            _hopTimer        = _isSprinting ? sprintHopInterval : hopInterval; // prevent immediate hop after landing
         }
+    }
+
+    // ── Natural Movement Hops ─────────────────────────────────────────────────
+    private void ProcessHop()
+    {
+        bool isMoving = _moveInput.sqrMagnitude > 0.01f;
+
+        if (!isMoving)
+        {
+            // Reset timer so the next hop fires promptly when movement resumes
+            _hopTimer = 0f;
+            return;
+        }
+
+        _hopTimer -= Time.deltaTime;
+
+        if (_hopTimer <= 0f && _isGrounded)
+        {
+            float height   = _isSprinting ? sprintHopHeight   : hopHeight;
+            float interval = _isSprinting ? sprintHopInterval : hopInterval;
+
+            LaunchVertical(height);
+            _hopTimer = interval;
+        }
+    }
+
+    // ── Shared launch helper ──────────────────────────────────────────────────
+    private void LaunchVertical(float height)
+    {
+        // v = sqrt(2 * |g| * h)
+        _velocity.y = Mathf.Sqrt(height * -2f * gravity);
     }
 
     // ── Horizontal Movement ───────────────────────────────────────────────────
@@ -166,14 +202,12 @@ public class RabbitController : MonoBehaviour
 
         float speed = _isSprinting ? sprintSpeed : walkSpeed;
 
-        // Flatten camera axes to XZ — guards against near-vertical camera angles
         Vector3 camFwd   = _cam.transform.forward;
         Vector3 camRight = _cam.transform.right;
         camFwd.y   = 0f;
         camRight.y = 0f;
 
-        // If camera is looking almost straight up/down, fall back to world axes
-        if (camFwd.sqrMagnitude < 0.01f)   camFwd   = Vector3.forward;
+        if (camFwd.sqrMagnitude   < 0.01f) camFwd   = Vector3.forward;
         if (camRight.sqrMagnitude < 0.01f) camRight = Vector3.right;
 
         camFwd.Normalize();
@@ -181,7 +215,6 @@ public class RabbitController : MonoBehaviour
 
         Vector3 moveDir = (camFwd * _moveInput.y + camRight * _moveInput.x).normalized;
 
-        // Smoothly rotate rabbit to face movement direction
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             Quaternion.LookRotation(moveDir),
@@ -200,21 +233,20 @@ public class RabbitController : MonoBehaviour
 
         if (!_wasGrounded && _isGrounded)
         {
-            // Landing: squash downward, spread sideways
+            // Landing squash
             s.y = 1f - squashAmount;
             s.x = 1f + squashAmount * 0.55f;
             s.z = 1f + squashAmount * 0.55f;
         }
         else if (!_isGrounded && _velocity.y > 0f)
         {
-            // Rising: stretch upward, compress sideways
+            // Rising stretch
             s.y = 1f + stretchAmount;
             s.x = 1f - stretchAmount * 0.4f;
             s.z = 1f - stretchAmount * 0.4f;
         }
         else
         {
-            // Recover back to neutral (1, 1, 1)
             s = Vector3.Lerp(s, Vector3.one, squashRecovery * Time.deltaTime);
         }
 
@@ -226,11 +258,10 @@ public class RabbitController : MonoBehaviour
     {
         if (_anim == null) return;
 
-        // Horizontal speed only — ignores vertical so jumping doesn't affect run anim
         float horizSpeed = new Vector2(_cc.velocity.x, _cc.velocity.z).magnitude;
 
-        _anim.SetFloat(_speedHash, horizSpeed);         // for blend trees
-        _anim.SetBool(_runHash, horizSpeed > 0.1f);     // for the demo-style Run bool
+        _anim.SetFloat(_speedHash, horizSpeed);
+        _anim.SetBool(_runHash, horizSpeed > 0.1f);
         _anim.SetBool(_isGroundedHash, _isGrounded);
     }
 }
