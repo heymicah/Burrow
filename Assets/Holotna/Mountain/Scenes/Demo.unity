@@ -20777,14 +20777,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   target: {fileID: 1926016012}
-  pivotHeight: 0.5
+  pivotOffset: {x: 0.2, y: 0.5, z: 0}
   distance: 1
   mouseSensitivity: 0.15
   gamepadSensitivity: 120
   invertY: 0
   minPitch: -15
   maxPitch: 60
-  smoothSpeed: 12
+  smoothSpeed: 10
 --- !u!1001 &766434621
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -53466,6 +53466,10 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 10
   rotationSpeed: 14
+  hopHeight: 0.18
+  sprintHopHeight: 0.28
+  hopInterval: 0.42
+  sprintHopInterval: 0.28
   jumpHeight: 1.8
   gravity: -28
   coyoteTime: 0.12
