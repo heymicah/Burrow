@@ -24,7 +24,7 @@ RenderSettings:
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: a1994d51737e25c4a84fe6cf3fa978d6, type: 2}
   m_HaloStrength: 0.5
@@ -35,7 +35,7 @@ RenderSettings:
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 0
+  m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1028201483}
   m_UseRadianceAmbientProbe: 0
@@ -9985,6 +9985,13 @@ MonoBehaviour:
   sun: {fileID: 1028201484}
   moon: {fileID: 1462792248}
   dayLengthInMinutes: 1
+  sunMaxIntensity: 1.75
+  sunColor: {r: 1, g: 0.95, b: 0.8, a: 1}
+  moonMaxIntensity: 0.2
+  moonColor: {r: 0.5, g: 0.6, b: 0.8, a: 1}
+  dayAmbient: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  nightAmbient: {r: 0.02, g: 0.02, b: 0.06, a: 1}
+  skyboxMaterial: {fileID: 0}
 --- !u!4 &383141682
 Transform:
   m_ObjectHideFlags: 0
@@ -26922,7 +26929,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2083396189}
   - {fileID: 844627417}
   - {fileID: 1718715356}
   - {fileID: 18207231}
@@ -28237,9 +28243,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7ed45cabda1e44a291561c82abcdff1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  sun: {fileID: 0}
-  moon: {fileID: 0}
+  sun: {fileID: 1028201483}
+  moon: {fileID: 1462792250}
   dayLengthInMinutes: 1
+  sunMaxIntensity: 1.75
+  sunColor: {r: 1, g: 0.95, b: 0.8, a: 1}
+  moonMaxIntensity: 0.2
+  moonColor: {r: 0.5, g: 0.6, b: 0.8, a: 1}
+  dayAmbient: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  nightAmbient: {r: 0.02, g: 0.02, b: 0.06, a: 1}
+  skyboxMaterial: {fileID: 2100000, guid: a1994d51737e25c4a84fe6cf3fa978d6, type: 2}
 --- !u!1001 &1028320204
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41207,8 +41220,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.6143645, g: 0.6946311, b: 0.735849, a: 1}
-  m_Intensity: 0.2
+  m_Color: {r: 0.7058824, g: 0.78431374, b: 1, a: 1}
+  m_Intensity: 1.97
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -48410,7 +48423,7 @@ Transform:
   m_LocalScale: {x: 0.1, y: 0.2, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2083396189}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &1710501501
 CapsuleCollider:
@@ -60904,3 +60917,4 @@ SceneRoots:
   - {fileID: 1826239539}
   - {fileID: 1168834540}
   - {fileID: 119680264}
+  - {fileID: 1710501500}
