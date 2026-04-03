@@ -36,10 +36,10 @@ public class FoxChaseAI : MonoBehaviour
                 return;
             }
 
-            // STOP if too close
+            // Stay near rabbit but stop moving closer
             if (distance <= stopDistance)
             {
-                isChasing = false;
+                transform.LookAt(rabbit);
                 return;
             }
 

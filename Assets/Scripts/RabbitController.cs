@@ -253,6 +253,15 @@ public class RabbitController : MonoBehaviour
         visualRoot.localScale = s;
     }
 
+    // ── Position Reset (used by GameManager for level transitions) ─────────
+    public void ResetPosition(Vector3 position)
+    {
+        _cc.enabled = false;
+        transform.position = position;
+        _cc.enabled = true;
+        _velocity = Vector3.zero;
+    }
+
     // ── Animator ──────────────────────────────────────────────────────────────
     private void AnimateRabbit()
     {
