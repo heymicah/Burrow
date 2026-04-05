@@ -23,6 +23,22 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelCompleteText;
     [SerializeField] private Button nextLevelButton;
 
+    [Header("Game Complete Popup")]
+    [SerializeField] private GameObject gameCompletePanel;
+    [SerializeField] private TMP_Text gameCompleteText;
+    [SerializeField] private Button playAgainButton;
+    [SerializeField] private Button quitButton;
+
+    public void ShowGameCompletePopup()
+    {
+        gameCompletePanel.SetActive(true);
+    }
+
+    public void HideGameCompletePopup()
+    {
+        gameCompletePanel.SetActive(false);
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

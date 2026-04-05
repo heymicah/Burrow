@@ -65,7 +65,16 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        UIManager.Instance.ShowLevelCompletePopup(currentLevel);
+
+        if (currentLevel >= levelEnvironments.Length)
+        {
+            // Final level — show game complete instead
+            UIManager.Instance.ShowGameCompletePopup();
+        }
+        else
+        {
+            UIManager.Instance.ShowLevelCompletePopup(currentLevel);
+        }
     }
 
     public void StartNextLevel()
@@ -107,6 +116,29 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
         UIManager.Instance.UpdateHealthBar(currentHealth, maxHealth);
         UIManager.Instance.UpdateLevelLabel(currentLevel);
+    }
+
+    private void ShowGameComplete()
+    {
+        Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        UIManager.Instance.ShowGameCompletePopup();
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+        // In editor this won't work, so add:
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
 
     private void SpawnFoxes()
