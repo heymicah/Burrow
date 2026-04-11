@@ -6,7 +6,6 @@ public class FoxChaseAI : MonoBehaviour
 
     public float detectionRange = 5f;
     public float chaseSpeed = 3f;
-    public float stopDistance = 1.5f;
     public float chaseDuration = 4f;
 
     private bool isChasing = false;
@@ -16,28 +15,20 @@ public class FoxChaseAI : MonoBehaviour
     {
         float distance = Vector3.Distance(transform.position, rabbit.position);
 
-        // START CHASE (ONLY if not already chasing)
+        // START CHASE
         if (!isChasing && distance <= detectionRange)
         {
             isChasing = true;
             chaseTimer = chaseDuration;
         }
 
-        // CHASING LOGIC
+        // ONLY RUN THIS IF CHASING
         if (isChasing)
         {
-            // countdown timer
             chaseTimer -= Time.deltaTime;
 
-            // STOP if time runs out
+            // STOP after time
             if (chaseTimer <= 0f)
-            {
-                isChasing = false;
-                return;
-            }
-
-            // STOP if too close
-            if (distance <= stopDistance)
             {
                 isChasing = false;
                 return;
@@ -49,8 +40,6 @@ public class FoxChaseAI : MonoBehaviour
                 rabbit.position,
                 chaseSpeed * Time.deltaTime
             );
-
-            transform.LookAt(rabbit);
         }
     }
 }
