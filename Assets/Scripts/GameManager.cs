@@ -52,13 +52,16 @@ public class GameManager : MonoBehaviour
     }
 
     public void CollectApple()
-    {
-        applesCollected++;
-        UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
+{
+    applesCollected++;
+    UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
 
-        if (applesCollected >= applesRequired)
-            LevelComplete();
-    }
+    if (applesCollected == 2)
+        UIManager.Instance.ShowDeforestationPopup(currentLevel);
+
+    if (applesCollected >= applesRequired)
+        LevelComplete();
+}
 
     private void LevelComplete()
     {
