@@ -39,7 +39,7 @@ public class UIManager : MonoBehaviour
     string[] facts = {
         "Every year, 10 million hectares of forest are lost to deforestation — that's the size of Iceland disappearing annually.",
         "Deforestation destroys the homes of over 80% of the world's land-based animals, plants, and insects.",
-        "It can take over 100 years for a forest to fully recover after deforestation. "It can take over 100 years for a forest to fully recover after deforestation. You can help by reducing paper waste, supporting sustainable products, and by demanding that your governments only source forest commodities in a way that ensures the protection of nature.""
+        "It can take over 100 years for a forest to fully recover after deforestation. It can take over 100 years for a forest to fully recover after deforestation. You can help by reducing paper waste, supporting sustainable products, and by demanding that your governments only source forest commodities in a way that ensures the protection of nature."
     };
 
     deforestationText.text = facts[level - 1];
