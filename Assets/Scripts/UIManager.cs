@@ -29,6 +29,30 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button playAgainButton;
     [SerializeField] private Button quitButton;
 
+    [Header("Deforestation Popup")]
+[SerializeField] private GameObject deforestationPopupPanel;
+[SerializeField] private TextMeshProUGUI deforestationText;
+[SerializeField] private Button deforestationCloseButton;
+
+    public void ShowDeforestationPopup(int level)
+{
+    string[] facts = {
+        "Every year, 10 million hectares of forest are lost to deforestation — that's the size of Iceland disappearing annually.",
+        "Deforestation destroys the homes of over 80% of the world's land-based animals, plants, and insects.",
+        "It can take over 100 years for a forest to fully recover after deforestation. "It can take over 100 years for a forest to fully recover after deforestation. You can help by reducing paper waste, supporting sustainable products, and by demanding that your governments only source forest commodities in a way that ensures the protection of nature.""
+    };
+
+    deforestationText.text = facts[level - 1];
+    deforestationPopupPanel.SetActive(true);
+    Time.timeScale = 0f;
+}
+
+public void HideDeforestationPopup()
+{
+    deforestationPopupPanel.SetActive(false);
+    Time.timeScale = 1f;
+}
+
     public void ShowGameCompletePopup()
     {
         gameCompletePanel.SetActive(true);
@@ -59,6 +83,9 @@ public class UIManager : MonoBehaviour
 
         if (levelCompletePanel != null)
             levelCompletePanel.SetActive(false);
+
+        if (deforestationCloseButton != null)
+            deforestationCloseButton.onClick.AddListener(() => HideDeforestationPopup());
     }
 
     public void UpdateProgressBar(int collected, int total)
