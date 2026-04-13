@@ -18,50 +18,15 @@ public class UIManager : MonoBehaviour
     [Header("Level Label")]
     [SerializeField] private TextMeshProUGUI levelLabel;
 
-    [Header("Level Complete Popup")]
-    [SerializeField] private GameObject levelCompletePanel;
-    [SerializeField] private TextMeshProUGUI levelCompleteText;
-    [SerializeField] private Button nextLevelButton;
-
-    [Header("Game Complete Popup")]
-    [SerializeField] private GameObject gameCompletePanel;
-    [SerializeField] private TMP_Text gameCompleteText;
-    [SerializeField] private Button playAgainButton;
-    [SerializeField] private Button quitButton;
-
-    [Header("Deforestation Popup")]
-[SerializeField] private GameObject deforestationPopupPanel;
-[SerializeField] private TextMeshProUGUI deforestationText;
-[SerializeField] private Button deforestationCloseButton;
-
-    public void ShowDeforestationPopup(int level)
-{
-    string[] facts = {
-        "Every year, 10 million hectares of forest are lost to deforestation — that's the size of Iceland disappearing annually.",
-        "Deforestation destroys the homes of over 80% of the world's land-based animals, plants, and insects.",
-        "It can take over 100 years for a forest to fully recover after deforestation. It can take over 100 years for a forest to fully recover after deforestation. You can help by reducing paper waste, supporting sustainable products, and by demanding that your governments only source forest commodities in a way that ensures the protection of nature."
-    };
-
-    deforestationText.text = facts[level - 1];
-    deforestationPopupPanel.SetActive(true);
-    Time.timeScale = 0f;
-}
-
-public void HideDeforestationPopup()
-{
-    deforestationPopupPanel.SetActive(false);
-    Time.timeScale = 1f;
-}
-
-    public void ShowGameCompletePopup()
-    {
-        gameCompletePanel.SetActive(true);
-    }
-
-    public void HideGameCompletePopup()
-    {
-        gameCompletePanel.SetActive(false);
-    }
+    [Header("Info Panel")]
+    [SerializeField] private GameObject infoPanel;
+    [SerializeField] private TextMeshProUGUI infoTitle;
+    [SerializeField] private TextMeshProUGUI infoPara1;
+    [SerializeField] private TextMeshProUGUI infoPara2;
+    [SerializeField] private Button infoPrimaryButton;
+    [SerializeField] private TextMeshProUGUI infoPrimaryButtonLabel;
+    [SerializeField] private Button infoSecondaryButton;
+    [SerializeField] private TextMeshProUGUI infoSecondaryButtonLabel;
 
     private void Awake()
     {
@@ -77,15 +42,48 @@ public void HideDeforestationPopup()
 
         if (progressBarFill != null)
             progressBarMaxWidth = progressBarFill.sizeDelta.x;
+    }
 
-        if (nextLevelButton != null)
-            nextLevelButton.onClick.AddListener(() => GameManager.Instance.StartNextLevel());
+    // Called by GameManager to show the right canvas at the right time
+    public void ShowInfoPanel(string title, string para1, string para2,
+                               string primaryLabel, System.Action primaryAction,
+                               string secondaryLabel = null, System.Action secondaryAction = null)
+    {
+        infoTitle.text = title;
+        infoPara1.text = para1;
 
-        if (levelCompletePanel != null)
-            levelCompletePanel.SetActive(false);
+        bool hasPara2 = !string.IsNullOrEmpty(para2);
+        infoPara2.gameObject.SetActive(hasPara2);
+        if (hasPara2) infoPara2.text = para2;
 
-        if (deforestationCloseButton != null)
-            deforestationCloseButton.onClick.AddListener(() => HideDeforestationPopup());
+        // Primary button (Start / Next Level)
+        infoPrimaryButton.onClick.RemoveAllListeners();
+        infoPrimaryButton.onClick.AddListener(() => primaryAction());
+        infoPrimaryButtonLabel.text = primaryLabel;
+        infoPrimaryButton.gameObject.SetActive(true);
+
+        // Secondary button (Quit — only on game over)
+        bool hasSecondary = secondaryAction != null;
+        infoSecondaryButton.gameObject.SetActive(hasSecondary);
+        if (hasSecondary)
+        {
+            infoSecondaryButton.onClick.RemoveAllListeners();
+            infoSecondaryButton.onClick.AddListener(() => secondaryAction());
+            infoSecondaryButtonLabel.text = secondaryLabel;
+        }
+
+        infoPanel.SetActive(true);
+        Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void HideInfoPanel()
+    {
+        infoPanel.SetActive(false);
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     public void UpdateProgressBar(int collected, int total)
@@ -97,7 +95,6 @@ public void HideDeforestationPopup()
             size.x = progressBarMaxWidth * ratio;
             progressBarFill.sizeDelta = size;
         }
-
         if (progressText != null)
             progressText.text = $"{collected} / {total} Apples";
     }
@@ -117,20 +114,5 @@ public void HideDeforestationPopup()
     {
         if (levelLabel != null)
             levelLabel.text = $"Level {level}";
-    }
-
-    public void ShowLevelCompletePopup(int level)
-    {
-        if (levelCompletePanel != null)
-            levelCompletePanel.SetActive(true);
-
-        if (levelCompleteText != null)
-            levelCompleteText.text = $"Level {level} Complete!";
-    }
-
-    public void HideLevelCompletePopup()
-    {
-        if (levelCompletePanel != null)
-            levelCompletePanel.SetActive(false);
     }
 }

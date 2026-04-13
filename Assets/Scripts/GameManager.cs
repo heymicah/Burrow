@@ -45,10 +45,50 @@ public class GameManager : MonoBehaviour
         applesCollected = 0;
         if (rabbit != null && rabbitSpawnPoint != null)
             rabbit.ResetPosition(rabbitSpawnPoint.position);
+
         UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
         UIManager.Instance.UpdateHealthBar(currentHealth, maxHealth);
         UIManager.Instance.UpdateLevelLabel(currentLevel);
         ActivateLevelEnvironment();
+
+        // Canvas 1: Welcome
+        UIManager.Instance.ShowInfoPanel(
+            "Welcome to Burrow!",
+            "Did you know that We Are Losing Forests at a Rate Equivalent to 27 Soccer Fields per Minute? Forests which are vital for many functions, including producing oxygen and rapidly disappearing. Don't believe us? Here is an opportunity to see it for yourself.",
+            "Throughout this game, you will need to collect apples to progress through levels. However, over time this task may become harder as resources run out.",
+            "Start", () => ShowLevelIntro(1)
+        );
+    }
+
+    private void ShowLevelIntro(int level)
+    {
+        switch (level)
+        {
+            case 1:
+                UIManager.Instance.ShowInfoPanel(
+                    "Level 1",
+                    "Forest degradation refers to when forest ecosystems are weakened to a point where they lose their ability to provide goods and services to people and nature. Nearly 1.6 billion hectares of forest are currently at a high risk of degradation. (1 hectare = 100 acres).",
+                    "In this first level, you will see a healthy forest. Collect 3 apples to move to the next level.",
+                    "Start", () => UIManager.Instance.HideInfoPanel()
+                );
+                break;
+            case 2:
+                UIManager.Instance.ShowInfoPanel(
+                    "Level 2",
+                    "When trees are cut down, the carbon they store is released back into the atmosphere, mainly as carbon dioxide. Between 2015 and 2017, the global loss of tropical forests generated 10 billion tonnes of carbon dioxide – nearly 10% of the annual human CO2 emissions.",
+                    "In this level, you will see the start of deforestation. Continue collecting apples to continue.",
+                    "Start", () => UIManager.Instance.HideInfoPanel()
+                );
+                break;
+            case 3:
+                UIManager.Instance.ShowInfoPanel(
+                    "Level 3",
+                    "We lose about 10 million hectares of forests every year. If you have made it to this level, you will see that there is not much forest left. Try your best to find food and complete the game.",
+                    null,
+                    "Start", () => UIManager.Instance.HideInfoPanel()
+                );
+                break;
+        }
     }
 
     public void CollectApple()
@@ -56,27 +96,26 @@ public class GameManager : MonoBehaviour
     applesCollected++;
     UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
 
-    if (applesCollected == 2)
-        UIManager.Instance.ShowDeforestationPopup(currentLevel);
-
     if (applesCollected >= applesRequired)
         LevelComplete();
 }
 
     private void LevelComplete()
     {
-        Time.timeScale = 0f;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        if (currentLevel >= levelEnvironments.Length)
+        if (currentLevel >= 3)
         {
-            // Final level — show game complete instead
-            UIManager.Instance.ShowGameCompletePopup();
+            // Canvas 5: Game over
+            UIManager.Instance.ShowInfoPanel(
+                "The End",
+                "As you can see, there is not much forest left. Food runs out and people move in. Did you know that 25% of western drugs used to treat disease come from the rainforest? Forests are not just homes for animals, or nature retreats. These are ecosystems producing biodiversity for animal species, removing carbon emissions from the atmosphere and turning it into oxygen.",
+                "Forests are vital to our survival as a species. Save forests, save life. Visit earth.org and ourworldindata.org to learn more about these stats.",
+                "Play Again", () => RestartGame(),
+                "Quit", () => QuitGame()
+            );
         }
         else
         {
-            UIManager.Instance.ShowLevelCompletePopup(currentLevel);
+            StartNextLevel();
         }
     }
 
@@ -86,48 +125,36 @@ public class GameManager : MonoBehaviour
         applesCollected = 0;
         currentHealth = maxHealth;
 
-        // Re-enable apples
         foreach (var apple in apples)
             apple.SetActive(true);
 
-        // Destroy old foxes
         foreach (var fox in spawnedFoxes)
-        {
-            if (fox != null)
-                Destroy(fox);
-        }
+            if (fox != null) Destroy(fox);
         spawnedFoxes.Clear();
 
-        // Spawn foxes from level 2 onward
         if (currentLevel >= 2)
             SpawnFoxes();
 
-        // Swap environment
         ActivateLevelEnvironment();
 
-        // Reset rabbit
         if (rabbit != null && rabbitSpawnPoint != null)
             rabbit.ResetPosition(rabbitSpawnPoint.position);
 
-        // Resume
-        Time.timeScale = 1f;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        // Update UI
-        UIManager.Instance.HideLevelCompletePopup();
         UIManager.Instance.UpdateProgressBar(applesCollected, applesRequired);
         UIManager.Instance.UpdateHealthBar(currentHealth, maxHealth);
         UIManager.Instance.UpdateLevelLabel(currentLevel);
+
+        // Canvas 3 or 4: Level intro (game stays paused, HideInfoPanel resumes it)
+        ShowLevelIntro(currentLevel);
     }
 
-    private void ShowGameComplete()
-    {
-        Time.timeScale = 0f;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-        UIManager.Instance.ShowGameCompletePopup();
-    }
+    // private void ShowGameComplete()
+    // {
+    //     Time.timeScale = 0f;
+    //     Cursor.lockState = CursorLockMode.None;
+    //     Cursor.visible = true;
+    //     UIManager.Instance.ShowGameCompletePopup();
+    // }
 
     public void RestartGame()
     {

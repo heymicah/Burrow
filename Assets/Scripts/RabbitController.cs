@@ -260,6 +260,7 @@ public class RabbitController : MonoBehaviour
         transform.position = position;
         _cc.enabled = true;
         _velocity = Vector3.zero;
+        transform.rotation = Quaternion.Euler(0f, 26f, 0f);
     }
 
     // ── Animator ──────────────────────────────────────────────────────────────
